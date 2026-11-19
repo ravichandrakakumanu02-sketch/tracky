@@ -307,9 +307,95 @@ class WorkoutDetailPopup extends StatelessWidget {
                     if (onDelete != null)
                       Center(
                         child: TextButton.icon(
-                          onPressed: () {
-                            Navigator.pop(context);
-                            onDelete?.call();
+                          onPressed: () async {
+                            // Show confirmation dialog before deleting
+                            final confirmed = await showDialog<bool>(
+                              context: context,
+                              barrierDismissible: false,
+                              builder: (dialogContext) => AlertDialog(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                backgroundColor: AppTheme.backgroundWhite,
+                                title: const Row(
+                                  children: [
+                                    Icon(
+                                      Icons.delete_outline_rounded,
+                                      color: AppTheme.errorRed,
+                                      size: 20,
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      'Delete Workout',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w800,
+                                        color: AppTheme.textPrimary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                content: const Text(
+                                  'Are you sure you want to delete this workout log? This action cannot be undone.',
+                                  style: TextStyle(
+                                    color: AppTheme.textSecondary,
+                                    fontSize: 13,
+                                    height: 1.5,
+                                  ),
+                                ),
+                                actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                                actions: [
+                                  OutlinedButton(
+                                    onPressed: () => Navigator.pop(dialogContext, false),
+                                    style: OutlinedButton.styleFrom(
+                                      side: const BorderSide(color: AppTheme.border),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 20,
+                                        vertical: 10,
+                                      ),
+                                    ),
+                                    child: const Text(
+                                      'Cancel',
+                                      style: TextStyle(
+                                        color: AppTheme.textSecondary,
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: () => Navigator.pop(dialogContext, true),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: AppTheme.errorRed,
+                                      foregroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 20,
+                                        vertical: 10,
+                                      ),
+                                    ),
+                                    child: const Text(
+                                      'Delete',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+
+                            if (confirmed == true) {
+                              // Close the detail popup first, then trigger delete
+                              if (context.mounted) Navigator.pop(context);
+                              onDelete?.call();
+                            }
                           },
                           icon: const Icon(
                             Icons.delete_outline_rounded,
