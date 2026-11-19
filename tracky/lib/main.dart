@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'screens/home_screen.dart';
+import 'screens/splash_gate_screen.dart';
 import 'theme/app_theme.dart';
 
 void main() {
@@ -21,7 +21,8 @@ void main() {
 
 /// TrackyApp is the root widget for Tracky gym workout tracking application.
 class TrackyApp extends StatelessWidget {
-  const TrackyApp({super.key});
+  final Widget? home;
+  const TrackyApp({super.key, this.home});
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +30,7 @@ class TrackyApp extends StatelessWidget {
       title: 'Tracky',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.whiteAndBlackTheme,
-      home: const HomeScreen(),
+      home: home ?? const SplashGateScreen(),
     );
   }
 }

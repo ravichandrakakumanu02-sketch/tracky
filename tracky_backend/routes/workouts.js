@@ -1,6 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../config/db');
+const authMiddleware = require('../middleware/auth');
+
+// Protect all workout endpoints with authentication middleware
+router.use(authMiddleware);
 
 /**
  * Helper function to calculate workout metrics:
@@ -71,12 +75,12 @@ router.post('/', async (req, res) => {
     // Start SQL Transaction to ensure all-or-nothing execution
     await connection.beginTransaction();
 
-    // 1. Insert workout into workout_logs table
+    // 1. Insert workout into workout_logs table with authenticated user's ID
     const [workoutResult] = await connection.query(
       `INSERT INTO workout_logs
-   (workout_date, body_weight, notes, total_sets, total_reps, total_volume, date, body_weight_kg, note)
-   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [workoutDate, weight, workoutNote, totalSets, totalReps, totalVolume, workoutDate, weight, workoutNote]
+   (user_id, workout_date, body_weight, notes, total_sets, total_reps, total_volume, date, body_weight_kg, note)
+   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [req.userId, workoutDate, weight, workoutNote, totalSets, totalReps, totalVolume, workoutDate, weight, workoutNote]
     );
 
     const workoutId = workoutResult.insertId;
@@ -139,9 +143,10 @@ VALUES (?, ?, ?, ?, ?)`,
  */
 router.get('/', async (req, res) => {
   try {
-    // 1. Fetch all workouts ordered by date descending (newest first)
+    // 1. Fetch all workouts for the authenticated user ordered by date descending (newest first)
     const [workouts] = await pool.query(
-      'SELECT * FROM workout_logs ORDER BY COALESCE(date, workout_date) DESC, id DESC'
+      'SELECT * FROM workout_logs WHERE user_id = ? ORDER BY COALESCE(date, workout_date) DESC, id DESC',
+      [req.userId]
     );
 
     if (workouts.length === 0) {
@@ -202,10 +207,10 @@ router.get('/:id', async (req, res) => {
   const { id } = req.params;
 
   try {
-    // 1. Fetch workout record by ID
+    // 1. Fetch workout record by ID belonging to authenticated user
     const [workouts] = await pool.query(
-      'SELECT * FROM workout_logs WHERE id = ?',
-      [id]
+      'SELECT * FROM workout_logs WHERE id = ? AND user_id = ?',
+      [id, req.userId]
     );
 
     if (workouts.length === 0) {
@@ -268,10 +273,10 @@ router.put('/:id', async (req, res) => {
   try {
     await connection.beginTransaction();
 
-    // 1. Check if the workout exists
+    // 1. Check if the workout exists and belongs to the authenticated user
     const [existing] = await connection.query(
-      'SELECT * FROM workout_logs WHERE id = ?',
-      [id]
+      'SELECT * FROM workout_logs WHERE id = ? AND user_id = ?',
+      [id, req.userId]
     );
 
     if (existing.length === 0) {
@@ -320,22 +325,22 @@ router.put('/:id', async (req, res) => {
         });
       }
 
-      // Update workout_logs with new totals
+      // Update workout_logs with new totals (scoped to user)
       await connection.query(
         `UPDATE workout_logs
          SET workout_date = ?, body_weight = ?, notes = ?, total_sets = ?, total_reps = ?, total_volume = ?,
              date = ?, body_weight_kg = ?, note = ?
-         WHERE id = ?`,
-        [updatedDate, updatedBodyWeight, updatedNote, totals.totalSets, totals.totalReps, totals.totalVolume, updatedDate, updatedBodyWeight, updatedNote, id]
+         WHERE id = ? AND user_id = ?`,
+        [updatedDate, updatedBodyWeight, updatedNote, totals.totalSets, totals.totalReps, totals.totalVolume, updatedDate, updatedBodyWeight, updatedNote, id, req.userId]
       );
     } else {
-      // If exercises not provided, only update the workout metadata
+      // If exercises not provided, only update the workout metadata (scoped to user)
       await connection.query(
         `UPDATE workout_logs
          SET workout_date = ?, body_weight = ?, notes = ?,
              date = ?, body_weight_kg = ?, note = ?
-         WHERE id = ?`,
-        [updatedDate, updatedBodyWeight, updatedNote, updatedDate, updatedBodyWeight, updatedNote, id]
+         WHERE id = ? AND user_id = ?`,
+        [updatedDate, updatedBodyWeight, updatedNote, updatedDate, updatedBodyWeight, updatedNote, id, req.userId]
       );
 
       // Fetch existing exercises
@@ -388,10 +393,10 @@ router.delete('/:id', async (req, res) => {
   try {
     await connection.beginTransaction();
 
-    // 1. Verify that the workout exists
+    // 1. Verify that the workout exists and belongs to the authenticated user
     const [existing] = await connection.query(
-      'SELECT id FROM workout_logs WHERE id = ?',
-      [id]
+      'SELECT id FROM workout_logs WHERE id = ? AND user_id = ?',
+      [id, req.userId]
     );
 
     if (existing.length === 0) {
@@ -402,8 +407,8 @@ router.delete('/:id', async (req, res) => {
     // 2. Delete child exercises first to maintain referential integrity
     await connection.query('DELETE FROM exercises WHERE workout_id = ?', [id]);
 
-    // 3. Delete the parent workout log
-    await connection.query('DELETE FROM workout_logs WHERE id = ?', [id]);
+    // 3. Delete the parent workout log (scoped to user)
+    await connection.query('DELETE FROM workout_logs WHERE id = ? AND user_id = ?', [id, req.userId]);
 
     await connection.commit();
 

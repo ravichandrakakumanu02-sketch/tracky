@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import '../models/workout_model.dart';
+import '../services/auth_service.dart';
 import '../services/workout_service.dart';
 import '../theme/app_theme.dart';
 import '../utils/date_formatter.dart';
 import '../widgets/app_logo.dart';
 import '../widgets/empty_workout_state.dart';
+import '../widgets/profile_sheet.dart';
 import '../widgets/summary_card.dart';
 import '../widgets/workout_card.dart';
 import '../widgets/workout_calendar.dart';
@@ -52,28 +54,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Future<void> _resetSampleData() async {
-    await _workoutService.resetToSampleData();
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Sample workouts restored!'),
-        duration: Duration(seconds: 2),
-      ),
-    );
-  }
-
-  Future<void> _clearAllWorkouts() async {
-    await _workoutService.clearAll();
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('All workouts cleared.'),
-        duration: Duration(seconds: 2),
-      ),
-    );
-  }
-
   Future<void> _deleteWorkout(String workoutId) async {
     final success = await _workoutService.deleteWorkout(workoutId);
     if (!mounted) return;
@@ -91,6 +71,24 @@ class _HomeScreenState extends State<HomeScreen> {
             _workoutService.errorMessage ?? 'Failed to delete workout.',
           ),
           backgroundColor: AppTheme.errorRed,
+        ),
+      );
+    }
+  }
+
+  void _openProfile() async {
+    var user = AuthService().currentUser;
+    if (user == null) {
+      user = await AuthService().fetchCurrentUser();
+    }
+    if (!mounted) return;
+    if (user != null) {
+      ProfileSheet.show(context, user: user);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Unable to load user profile. Please check your connection.'),
+          duration: Duration(seconds: 2),
         ),
       );
     }
@@ -150,78 +148,56 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                 ],
                               ),
-                              // Popup Menu
-                              PopupMenuButton<String>(
-                                icon: Container(
-                                  padding: const EdgeInsets.all(7),
+                              // Profile Button
+                              InkWell(
+                                onTap: _openProfile,
+                                borderRadius: BorderRadius.circular(12),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                                   decoration: BoxDecoration(
                                     color: AppTheme.surface,
-                                    borderRadius: BorderRadius.circular(10),
+                                    borderRadius: BorderRadius.circular(12),
                                     border: Border.all(
                                       color: AppTheme.border,
                                       width: 1,
                                     ),
                                   ),
-                                  child: const Icon(
-                                    Icons.more_horiz_rounded,
-                                    color: AppTheme.textSecondary,
-                                    size: 16,
-                                  ),
-                                ),
-                                color: AppTheme.surface,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(14),
-                                  side: const BorderSide(
-                                    color: AppTheme.border,
-                                    width: 1,
-                                  ),
-                                ),
-                                onSelected: (value) {
-                                  if (value == 'reset') {
-                                    _resetSampleData();
-                                  } else if (value == 'clear') {
-                                    _clearAllWorkouts();
-                                  }
-                                },
-                                itemBuilder: (context) => [
-                                  const PopupMenuItem(
-                                    value: 'reset',
-                                    child: Row(
-                                      children: [
-                                        Icon(
-                                          Icons.refresh_rounded,
-                                          size: 16,
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      CircleAvatar(
+                                        radius: 11,
+                                        backgroundColor: AppTheme.primaryBlack,
+                                        child: Text(
+                                          AuthService().currentUser?.initials ?? '?',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 9,
+                                            fontWeight: FontWeight.w800,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 7),
+                                      Text(
+                                        AuthService().currentUser?.name.split(' ').first ?? 'Profile',
+                                        style: const TextStyle(
                                           color: AppTheme.textPrimary,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w700,
                                         ),
-                                        SizedBox(width: 8),
-                                        Text('Load Sample Data', style: TextStyle(fontSize: 13)),
-                                      ],
-                                    ),
+                                      ),
+                                    ],
                                   ),
-                                  const PopupMenuItem(
-                                    value: 'clear',
-                                    child: Row(
-                                      children: [
-                                        Icon(
-                                          Icons.delete_sweep_outlined,
-                                          size: 16,
-                                          color: AppTheme.errorRed,
-                                        ),
-                                        SizedBox(width: 8),
-                                        Text('Clear All (Test Empty State)', style: TextStyle(fontSize: 13)),
-                                      ],
-                                    ),
-                                  ),
-                                ],
+                                ),
                               ),
                             ],
                           ),
                           const SizedBox(height: 12),
 
                           // Welcome Message & Date
-                          const Text(
-                            'Welcome back! 💪',
-                            style: TextStyle(
+                          Text(
+                            'Welcome back${AuthService().currentUser != null ? ', ${AuthService().currentUser!.name.split(' ').first}' : ''}! 💪',
+                            style: const TextStyle(
                               color: AppTheme.textPrimary,
                               fontSize: 20,
                               fontWeight: FontWeight.w800,

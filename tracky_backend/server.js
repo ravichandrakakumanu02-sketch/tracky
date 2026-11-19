@@ -4,6 +4,7 @@ const cors = require('cors');
 require('dotenv').config();
 
 const db = require('./config/db');
+const authRoutes = require('./routes/auth');
 const workoutRoutes = require('./routes/workouts');
 
 const app = express();
@@ -20,6 +21,9 @@ app.get('/', (req, res) => {
     message: 'Tracky Gym Tracker backend is up and running!'
   });
 });
+
+// Authentication routes
+app.use('/api/auth', authRoutes);
 
 // Workout routes
 app.use('/api/workouts', workoutRoutes);

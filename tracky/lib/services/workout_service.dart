@@ -323,6 +323,14 @@ class WorkoutService extends ChangeNotifier {
     }
   }
 
+  /// Clears in-memory workout state upon user logout without affecting database.
+  void clearActiveSessionWorkouts() {
+    _workouts.clear();
+    _errorMessage = null;
+    _isLoading = false;
+    notifyListeners();
+  }
+
   /// Clear all workouts (useful for testing empty states).
   Future<void> clearAll() async {
     await _repository.clearAll();

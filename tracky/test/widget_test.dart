@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:tracky/main.dart';
 import 'package:tracky/models/exercise_model.dart';
 import 'package:tracky/models/workout_model.dart';
+import 'package:tracky/screens/home_screen.dart';
 import 'package:tracky/services/workout_service.dart';
 
 void main() {
@@ -14,7 +15,7 @@ void main() {
 
   testWidgets('Tracky launches and renders header, minimal calendar, summary, and empty state',
       (WidgetTester tester) async {
-    await tester.pumpWidget(const TrackyApp());
+    await tester.pumpWidget(const TrackyApp(home: HomeScreen()));
     await tester.pumpAndSettle();
 
     // Verify App Header
@@ -64,7 +65,7 @@ void main() {
 
     await WorkoutService().addWorkout(testWorkout);
 
-    await tester.pumpWidget(const TrackyApp());
+    await tester.pumpWidget(const TrackyApp(home: HomeScreen()));
     await tester.pumpAndSettle();
 
     // Verify stats
@@ -95,7 +96,7 @@ void main() {
   });
 
   testWidgets('Navigate to Add Workout Screen and back', (WidgetTester tester) async {
-    await tester.pumpWidget(const TrackyApp());
+    await tester.pumpWidget(const TrackyApp(home: HomeScreen()));
     await tester.pumpAndSettle();
 
     // Tap Floating Action Button
@@ -118,7 +119,7 @@ void main() {
 
   testWidgets('Add multiple exercises and save workout flow updates home screen and calendar',
       (WidgetTester tester) async {
-    await tester.pumpWidget(const TrackyApp());
+    await tester.pumpWidget(const TrackyApp(home: HomeScreen()));
     await tester.pumpAndSettle();
 
     // Navigate to Add Workout Screen
