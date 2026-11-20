@@ -27,6 +27,13 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  /// Fill in demo credentials and log in immediately (no backend required).
+  Future<void> _useDemoAccount() async {
+    _emailController.text = 'demo@gmail.com';
+    _passwordController.text = 'demo@123';
+    await _handleLogin();
+  }
+
   Future<void> _handleLogin() async {
     FocusScope.of(context).unfocus();
     setState(() => _errorMessage = null);
@@ -252,6 +259,40 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                   ),
                   const SizedBox(height: 20),
+
+                  // ── Demo Account shortcut ──────────────────────────────
+                  OutlinedButton.icon(
+                    onPressed: _isLoading ? null : _useDemoAccount,
+                    icon: const Icon(Icons.science_outlined, size: 18),
+                    label: const Text(
+                      'Use Demo Account',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppTheme.textSecondary,
+                      side: const BorderSide(color: AppTheme.border, width: 1.2),
+                      padding: const EdgeInsets.symmetric(vertical: 13),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'demo@gmail.com  •  demo@123',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: AppTheme.textSecondary,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      letterSpacing: 0.2,
+                    ),
+                  ),
+                  // ──────────────────────────────────────────────────────
+                  const SizedBox(height: 12),
 
                   // Navigation to Register Screen
                   Row(

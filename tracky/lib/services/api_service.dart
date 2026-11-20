@@ -24,18 +24,30 @@ class ApiService {
 
   ApiService._internal();
 
-  /// Default API base URL configured for the Android emulator.
-  /// Automatically uses localhost for Web and Desktop platforms.
+  /// Default API base URL.
+  /// - Web/Desktop: uses localhost
+  /// - Android Emulator: uses 10.0.2.2 (special alias for host PC)
+  /// - Physical Android device: uses your PC's local WiFi IP (must be same network)
+  ///
+  /// TO RUN ON A PHYSICAL PHONE:
+  ///   1. Make sure your phone and PC are on the same WiFi.
+  ///   2. Set PHYSICAL_DEVICE_IP below to your PC's local IP (run `ipconfig` on Windows).
+  ///   3. Keep your backend running with `npm run dev`.
+  static const String _physicalDeviceIp = '192.168.1.28'; // <-- Your PC's WiFi IP
+
   static String get defaultBaseUrl {
     if (kIsWeb) {
       return 'http://localhost:3000';
     }
     try {
       if (Platform.isAndroid) {
-        return 'http://10.0.2.2:3000';
+        // 10.0.2.2 works for emulator only. Physical devices need the LAN IP.
+        // We use a simple heuristic: always use _physicalDeviceIp for Android builds.
+        // If using the emulator, temporarily change _physicalDeviceIp to '10.0.2.2'.
+        return 'http://$_physicalDeviceIp:3000';
       }
     } catch (_) {
-      // Fallback if Platform check is unsupported
+      // Fallback if Platform check is unsupported (e.g. web)
     }
     return 'http://localhost:3000';
   }
