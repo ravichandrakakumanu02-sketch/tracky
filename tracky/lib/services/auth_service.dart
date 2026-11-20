@@ -38,20 +38,6 @@ class AuthService extends ChangeNotifier {
         return false;
       }
 
-      // Restore demo session without hitting the backend.
-      if (savedToken == 'demo_token_no_backend') {
-        _token = savedToken;
-        _currentUser = UserModel(
-          id: 0,
-          name: 'Demo User',
-          email: _demoEmail,
-          createdAt: DateTime(2024, 1, 1),
-        );
-        _isInitialized = true;
-        notifyListeners();
-        return true;
-      }
-
       _token = savedToken;
       // Validate token with backend /api/auth/me
       final user = await ApiService().getCurrentUser(savedToken);
@@ -102,43 +88,12 @@ class AuthService extends ChangeNotifier {
     }
   }
 
-  // ─── Demo credentials (no backend required) ───────────────────────────────
-  static const String _demoEmail = 'demo@gmail.com';
-  static const String _demoPassword = 'demo@123';
-
-  /// Checks if the given credentials match the built-in demo account.
-  bool _isDemoLogin(String email, String password) =>
-      email.toLowerCase().trim() == _demoEmail && password == _demoPassword;
-
-  /// Performs a local demo login — sets a fake user and skips any network call.
-  Future<String?> _loginAsDemo() async {
-    _token = 'demo_token_no_backend';
-    _currentUser = UserModel(
-      id: 0,
-      name: 'Demo User',
-      email: _demoEmail,
-      createdAt: DateTime(2024, 1, 1),
-    );
-    // Persist a demo token so splash screen keeps the session alive.
-    await _storage.write(key: _tokenStorageKey, value: _token!);
-    // Load empty workout list (no backend, starts fresh).
-    WorkoutService().clearActiveSessionWorkouts();
-    notifyListeners();
-    return null; // null = success
-  }
-  // ──────────────────────────────────────────────────────────────────────────
-
   /// Log in an existing user with email and password.
   /// Returns null on success, or an error message string on failure.
   Future<String?> login({
     required String email,
     required String password,
   }) async {
-    // Demo shortcut — works without backend.
-    if (_isDemoLogin(email, password)) {
-      return _loginAsDemo();
-    }
-
     try {
       final data = await ApiService().login(email, password);
       final rawToken = data['token'] as String?;
@@ -171,17 +126,6 @@ class AuthService extends ChangeNotifier {
       final savedToken = await _storage.read(key: _tokenStorageKey);
       if (savedToken == null || savedToken.isEmpty) return null;
       _token = savedToken;
-    }
-    // Demo session — no backend call needed.
-    if (_token == 'demo_token_no_backend') {
-      _currentUser = UserModel(
-        id: 0,
-        name: 'Demo User',
-        email: _demoEmail,
-        createdAt: DateTime(2024, 1, 1),
-      );
-      notifyListeners();
-      return _currentUser;
     }
     try {
       final user = await ApiService().getCurrentUser(_token!);

@@ -27,13 +27,6 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  /// Fill in demo credentials and log in immediately (no backend required).
-  Future<void> _useDemoAccount() async {
-    _emailController.text = 'demo@gmail.com';
-    _passwordController.text = 'demo@123';
-    await _handleLogin();
-  }
-
   Future<void> _handleLogin() async {
     FocusScope.of(context).unfocus();
     setState(() => _errorMessage = null);
@@ -54,9 +47,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (error == null) {
       // Login successful -> navigate to Home Screen
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
-      );
+      Navigator.of(
+        context,
+      ).pushReplacement(MaterialPageRoute(builder: (_) => const HomeScreen()));
     } else {
       setState(() => _errorMessage = error);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -115,16 +108,24 @@ class _LoginScreenState extends State<LoginScreen> {
                   // Error Banner if present
                   if (_errorMessage != null) ...[
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
                       decoration: BoxDecoration(
                         color: AppTheme.errorRed.withAlpha(20),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppTheme.errorRed.withAlpha(80)),
+                        border: Border.all(
+                          color: AppTheme.errorRed.withAlpha(80),
+                        ),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.error_outline_rounded,
-                              color: AppTheme.errorRed, size: 18),
+                          const Icon(
+                            Icons.error_outline_rounded,
+                            color: AppTheme.errorRed,
+                            size: 18,
+                          ),
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(
@@ -147,7 +148,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                     textInputAction: TextInputAction.next,
-                    style: const TextStyle(color: AppTheme.textPrimary, fontSize: 14),
+                    style: const TextStyle(
+                      color: AppTheme.textPrimary,
+                      fontSize: 14,
+                    ),
                     decoration: InputDecoration(
                       labelText: 'Email Address',
                       hintText: 'alex@example.com',
@@ -164,14 +168,19 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(14),
-                        borderSide: const BorderSide(color: AppTheme.primaryBlack, width: 1.5),
+                        borderSide: const BorderSide(
+                          color: AppTheme.primaryBlack,
+                          width: 1.5,
+                        ),
                       ),
                     ),
                     validator: (val) {
                       if (val == null || val.trim().isEmpty) {
                         return 'Please enter your email';
                       }
-                      if (!RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(val.trim())) {
+                      if (!RegExp(
+                        r'^[^\s@]+@[^\s@]+\.[^\s@]+$',
+                      ).hasMatch(val.trim())) {
                         return 'Please enter a valid email address';
                       }
                       return null;
@@ -185,11 +194,17 @@ class _LoginScreenState extends State<LoginScreen> {
                     obscureText: _obscurePassword,
                     textInputAction: TextInputAction.done,
                     onFieldSubmitted: (_) => _handleLogin(),
-                    style: const TextStyle(color: AppTheme.textPrimary, fontSize: 14),
+                    style: const TextStyle(
+                      color: AppTheme.textPrimary,
+                      fontSize: 14,
+                    ),
                     decoration: InputDecoration(
                       labelText: 'Password',
                       hintText: '••••••••',
-                      prefixIcon: const Icon(Icons.lock_outline_rounded, size: 20),
+                      prefixIcon: const Icon(
+                        Icons.lock_outline_rounded,
+                        size: 20,
+                      ),
                       suffixIcon: IconButton(
                         icon: Icon(
                           _obscurePassword
@@ -198,8 +213,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           size: 20,
                           color: AppTheme.textSecondary,
                         ),
-                        onPressed: () =>
-                            setState(() => _obscurePassword = !_obscurePassword),
+                        onPressed:
+                            () => setState(
+                              () => _obscurePassword = !_obscurePassword,
+                            ),
                       ),
                       filled: true,
                       fillColor: AppTheme.surface,
@@ -213,7 +230,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(14),
-                        borderSide: const BorderSide(color: AppTheme.primaryBlack, width: 1.5),
+                        borderSide: const BorderSide(
+                          color: AppTheme.primaryBlack,
+                          width: 1.5,
+                        ),
                       ),
                     ),
                     validator: (val) {
@@ -240,59 +260,26 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       elevation: 0,
                     ),
-                    child: _isLoading
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
+                    child:
+                        _isLoading
+                            ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                            : const Text(
+                              'Log In',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.2,
+                              ),
                             ),
-                          )
-                        : const Text(
-                            'Log In',
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 0.2,
-                            ),
-                          ),
                   ),
-                  const SizedBox(height: 20),
-
-                  // ── Demo Account shortcut ──────────────────────────────
-                  OutlinedButton.icon(
-                    onPressed: _isLoading ? null : _useDemoAccount,
-                    icon: const Icon(Icons.science_outlined, size: 18),
-                    label: const Text(
-                      'Use Demo Account',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppTheme.textSecondary,
-                      side: const BorderSide(color: AppTheme.border, width: 1.2),
-                      padding: const EdgeInsets.symmetric(vertical: 13),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'demo@gmail.com  •  demo@123',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: AppTheme.textSecondary,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500,
-                      letterSpacing: 0.2,
-                    ),
-                  ),
-                  // ──────────────────────────────────────────────────────
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 32),
 
                   // Navigation to Register Screen
                   Row(

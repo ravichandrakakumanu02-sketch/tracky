@@ -6,6 +6,7 @@ require('dotenv').config();
 const db = require('./config/db');
 const authRoutes = require('./routes/auth');
 const workoutRoutes = require('./routes/workouts');
+const aiRoutes = require('./routes/ai');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -27,6 +28,9 @@ app.use('/api/auth', authRoutes);
 
 // Workout routes
 app.use('/api/workouts', workoutRoutes);
+
+// AI routes
+app.use('/api/ai', aiRoutes);
 
 // Start server after checking MySQL
 async function startServer() {

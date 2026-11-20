@@ -12,6 +12,7 @@ import '../widgets/workout_card.dart';
 import '../widgets/workout_calendar.dart';
 import '../widgets/workout_detail_popup.dart';
 import 'add_workout_screen.dart';
+import 'ai_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -25,13 +26,17 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _navigateToAddWorkout() async {
     final result = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(
-        builder: (context) => const AddWorkoutScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => const AddWorkoutScreen()),
     );
     if (result == true) {
       await _workoutService.loadWorkouts();
     }
+  }
+
+  void _navigateToAI() {
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (context) => const AIScreen()));
   }
 
   void _navigateToEditWorkout(Workout workout) async {
@@ -77,17 +82,16 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _openProfile() async {
-    var user = AuthService().currentUser;
-    if (user == null) {
-      user = await AuthService().fetchCurrentUser();
-    }
+    final user = await AuthService().fetchCurrentUser();
     if (!mounted) return;
     if (user != null) {
       ProfileSheet.show(context, user: user);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Unable to load user profile. Please check your connection.'),
+          content: Text(
+            'Unable to load user profile. Please check your connection.',
+          ),
           duration: Duration(seconds: 2),
         ),
       );
@@ -148,47 +152,83 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                 ],
                               ),
-                              // Profile Button
-                              InkWell(
-                                onTap: _openProfile,
-                                borderRadius: BorderRadius.circular(12),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                  decoration: BoxDecoration(
-                                    color: AppTheme.surface,
+                              Row(
+                                children: [
+                                  // AI Assistant Button
+                                  InkWell(
+                                    onTap: _navigateToAI,
                                     borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(
-                                      color: AppTheme.border,
-                                      width: 1,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: AppTheme.accentOrangeLight,
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color: AppTheme.accentOrangeBorder,
+                                          width: 1,
+                                        ),
+                                      ),
+                                      child: const Icon(
+                                        Icons.auto_awesome,
+                                        color: AppTheme.accentOrange,
+                                        size: 20,
+                                      ),
                                     ),
                                   ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      CircleAvatar(
-                                        radius: 11,
-                                        backgroundColor: AppTheme.primaryBlack,
-                                        child: Text(
-                                          AuthService().currentUser?.initials ?? '?',
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 9,
-                                            fontWeight: FontWeight.w800,
+                                  const SizedBox(width: 8),
+                                  // Profile Button
+                                  InkWell(
+                                    onTap: _openProfile,
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 6,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: AppTheme.surface,
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color: AppTheme.border,
+                                          width: 1,
+                                        ),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          CircleAvatar(
+                                            radius: 11,
+                                            backgroundColor:
+                                                AppTheme.primaryBlack,
+                                            child: Text(
+                                              AuthService()
+                                                      .currentUser
+                                                      ?.initials ??
+                                                  '?',
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 9,
+                                                fontWeight: FontWeight.w800,
+                                              ),
+                                            ),
                                           ),
-                                        ),
+                                          const SizedBox(width: 7),
+                                          Text(
+                                            AuthService().currentUser?.name
+                                                    .split(' ')
+                                                    .first ??
+                                                'Profile',
+                                            style: const TextStyle(
+                                              color: AppTheme.textPrimary,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                      const SizedBox(width: 7),
-                                      Text(
-                                        AuthService().currentUser?.name.split(' ').first ?? 'Profile',
-                                        style: const TextStyle(
-                                          color: AppTheme.textPrimary,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                      ),
-                                    ],
+                                    ),
                                   ),
-                                ),
+                                ],
                               ),
                             ],
                           ),
@@ -287,7 +327,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                   decoration: BoxDecoration(
                                     color: AppTheme.surfaceMuted,
                                     borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(color: AppTheme.border, width: 0.8),
+                                    border: Border.all(
+                                      color: AppTheme.border,
+                                      width: 0.8,
+                                    ),
                                   ),
                                   child: Text(
                                     '${workouts.length} ${workouts.length == 1 ? 'log' : 'logs'}',
@@ -357,7 +400,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       hasScrollBody: false,
                       child: EmptyWorkoutState(
                         onAddWorkout: _navigateToAddWorkout,
-                        onResetSampleData: () => _workoutService.resetToSampleData(),
+                        onResetSampleData:
+                            () => _workoutService.resetToSampleData(),
                       ),
                     )
                   // Workout History List (Reverse Chronological: newest first)
@@ -365,17 +409,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     SliverPadding(
                       padding: const EdgeInsets.fromLTRB(18, 0, 18, 90),
                       sliver: SliverList(
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) {
-                            final workout = workouts[index];
-                            return WorkoutCard(
-                              workout: workout,
-                              onDelete: () => _deleteWorkout(workout.id),
-                              onEdit: () => _navigateToEditWorkout(workout),
-                            );
-                          },
-                          childCount: workouts.length,
-                        ),
+                        delegate: SliverChildBuilderDelegate((context, index) {
+                          final workout = workouts[index];
+                          return WorkoutCard(
+                            workout: workout,
+                            onDelete: () => _deleteWorkout(workout.id),
+                            onEdit: () => _navigateToEditWorkout(workout),
+                          );
+                        }, childCount: workouts.length),
                       ),
                     ),
                 ],
